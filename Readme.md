@@ -1,19 +1,39 @@
-# Airbnb Top Reviews Scraping Service
+# Airbnb Reviews Scraper
 
-A Node.js web service that scrapes Airbnb reviews and uses AI to select the top 3 most positive reviews for any Airbnb listing.
+A simple, lightweight Node.js web service that scrapes Airbnb reviews and intelligently selects the top 5 most positive reviews for any Airbnb listing using content analysis.
 
 ## Features
 
 - 🔍 **Web Scraping**: Automatically scrape reviews from any Airbnb listing URL
-- 🤖 **AI Analysis**: Use DeepSeek AI to intelligently select the top 3 most positive reviews
-- 📊 **Review Management**: Store and retrieve analysis results
-- 🚀 **RESTful API**: Easy-to-use HTTP endpoints
-- ⚡ **Async Processing**: Non-blocking review analysis
+- � **Smart Analysis**: Content-based algorithm to select top 5 positive reviews
+- **RESTful API**: Easy-to-use HTTP endpoints
+- ⚡ **Direct Response**: Instant results, no complex async tracking
+- 🎯 **No External Dependencies**: Self-contained service with no AI API requirements
+- 🛡️ **Robust**: Built-in error handling and browser automation
+- 💰 **Cost-Effective**: No API fees or usage limits
+- 🔒 **Privacy-Focused**: All processing happens locally
 
 ## Prerequisites
 
 - Node.js 14.0.0 or higher
-- DeepSeek API key (for AI analysis)
+- Chrome/Chromium browser (automatically detected)
+
+## Quick Start
+
+```bash
+# Clone and install
+git clone <repository-url>
+cd stl-listing-review-fetching-service
+npm install
+
+# Start the service
+npm start
+
+# Test with an Airbnb listing
+curl -X POST http://localhost:3000/api/scrape-and-analyze \
+  -H "Content-Type: application/json" \
+  -d '{"airbnbUrl": "https://www.airbnb.com/rooms/YOUR_LISTING_ID", "maxReviews": 10}'
+```
 
 ## Installation
 
@@ -30,14 +50,7 @@ cd stl-listing-review-fetching-service
 npm install
 ```
 
-3. Create a `.env` file in the root directory:
-
-```env
-DEEPSEEK_API_KEY=your_deepseek_api_key_here
-PORT=3000
-```
-
-4. Start the service:
+3. Start the service:
 
 ```bash
 npm start
@@ -55,7 +68,7 @@ npm run dev
 
 **POST** `/api/scrape-and-analyze`
 
-Scrapes reviews from an Airbnb listing and analyzes them to find the top 3 most positive reviews.
+Scrapes reviews from an Airbnb listing and analyzes them to find the top 5 most positive reviews.
 
 **Request Body:**
 
@@ -70,9 +83,22 @@ Scrapes reviews from an Airbnb listing and analyzes them to find the top 3 most 
 
 ```json
 {
-  "analysisId": "scrape_1",
-  "status": "scraping",
-  "message": "Starting to scrape Airbnb reviews and analyze for top positive reviews"
+  "listingId": "12345678",
+  "propertyName": "Beautiful Beach House",
+  "location": "Miami Beach, FL",
+  "allReviews": [
+    "Amazing place with great views...",
+    "Perfect location and clean...",
+    "..."
+  ],
+  "topReviews": [
+    "Amazing place with great views...",
+    "Perfect location and clean...",
+    "..."
+  ],
+  "totalReviews": 15,
+  "topReviewsCount": 5,
+  "analyzedAt": "2024-01-15T10:30:00.000Z"
 }
 ```
 
@@ -108,11 +134,11 @@ Scrapes reviews from an Airbnb listing without AI analysis.
 }
 ```
 
-### 3. Submit Reviews for Analysis
+### 3. Analyze Reviews
 
 **POST** `/api/analyze`
 
-Analyze a list of reviews to find the top 3 most positive ones.
+Analyze a list of reviews to find the top 5 most positive ones.
 
 **Request Body:**
 
@@ -127,43 +153,22 @@ Analyze a list of reviews to find the top 3 most positive ones.
 }
 ```
 
-### 4. Get Analysis Results
-
-**GET** `/api/analysis/:id`
-
-Retrieve the results of a completed analysis.
-
 **Response:**
 
 ```json
 {
-  "id": "scrape_1",
-  "airbnbUrl": "https://www.airbnb.com/rooms/12345678",
-  "listingId": "12345678",
   "propertyName": "Beautiful Beach House",
-  "location": "Miami Beach, FL",
-  "status": "completed",
-  "reviewCount": 15,
-  "scrapedReviews": [...],
-  "topReviews": "TOP 3 REVIEWS:\n\nREVIEW 1:\n[Most positive review]\n\nREVIEW 2:\n[Second most positive review]\n\nREVIEW 3:\n[Third most positive review]",
-  "createdAt": "2024-01-15T10:30:00.000Z",
-  "completedAt": "2024-01-15T10:32:00.000Z"
+  "totalReviews": 10,
+  "topReviews": [
+    "Amazing place with great views...",
+    "Perfect location and clean...",
+    "..."
+  ],
+  "analyzedAt": "2024-01-15T10:30:00.000Z"
 }
 ```
 
-### 5. List All Analyses
-
-**GET** `/api/analyses`
-
-Get a list of all analyses with their status.
-
-### 6. Delete Analysis
-
-**DELETE** `/api/analysis/:id`
-
-Delete a specific analysis.
-
-### 7. Health Check
+### 4. Health Check
 
 **GET** `/health`
 
@@ -184,13 +189,7 @@ curl -X POST http://localhost:3000/api/scrape-and-analyze \
   }'
 ```
 
-2. **Check analysis status:**
-
-```bash
-curl http://localhost:3000/api/analysis/scrape_1
-```
-
-3. **Scrape reviews only:**
+2. **Scrape reviews only:**
 
 ```bash
 curl -X POST http://localhost:3000/api/scrape-reviews \
@@ -198,6 +197,21 @@ curl -X POST http://localhost:3000/api/scrape-reviews \
   -d '{
     "airbnbUrl": "https://www.airbnb.com/rooms/12345678",
     "maxReviews": 10
+  }'
+```
+
+3. **Analyze existing reviews:**
+
+```bash
+curl -X POST http://localhost:3000/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reviews": [
+      "Amazing place with great views...",
+      "Perfect location and clean...",
+      "Wonderful host and beautiful property..."
+    ],
+    "propertyName": "Beautiful Beach House"
   }'
 ```
 
@@ -217,42 +231,34 @@ const response = await fetch("http://localhost:3000/api/scrape-and-analyze", {
 });
 
 const result = await response.json();
-console.log("Analysis ID:", result.analysisId);
-
-// Poll for results
-const checkStatus = async (analysisId) => {
-  const statusResponse = await fetch(
-    `http://localhost:3000/api/analysis/${analysisId}`
-  );
-  const status = await statusResponse.json();
-
-  if (status.status === "completed") {
-    console.log("Top reviews:", status.topReviews);
-  } else if (status.status === "error") {
-    console.error("Error:", status.error);
-  } else {
-    // Still processing, check again in 2 seconds
-    setTimeout(() => checkStatus(analysisId), 2000);
-  }
-};
-
-checkStatus(result.analysisId);
+console.log("Property:", result.propertyName);
+console.log("Total reviews:", result.totalReviews);
+console.log("Top 5 reviews:", result.topReviews);
 ```
 
-## Configuration
+## How It Works
 
-### Environment Variables
+### Smart Review Selection Algorithm
 
-- `DEEPSEEK_API_KEY`: Your DeepSeek API key for AI analysis
+The service uses a content-based scoring algorithm to select the top 5 reviews:
+
+1. **Length Score**: Prefers reviews between 100-800 characters (optimal detail level)
+2. **Positive Keywords**: Scores reviews containing positive words like "amazing", "excellent", "clean", "recommend", etc.
+3. **Specific Details**: Rewards reviews mentioning specific amenities, host qualities, or location details
+4. **Quality Filter**: Excludes metadata, ratings summaries, and duplicate content
+
+### Configuration
+
+#### Environment Variables
+
 - `PORT`: Server port (default: 3000)
 
-### Rate Limiting
-
-The service includes built-in protection against excessive requests:
+#### Built-in Protections
 
 - Maximum 50 reviews per analysis request
 - Automatic browser cleanup after each scraping session
 - User agent rotation to avoid detection
+- Robust error handling and timeouts
 
 ## Error Handling
 
@@ -275,8 +281,8 @@ The service handles various error scenarios:
 
 - Requires valid Airbnb listing URLs
 - Scraping may be affected by Airbnb's anti-bot measures
-- AI analysis requires a valid DeepSeek API key
-- In-memory storage (use database for production)
+- Content-based analysis (no external AI dependency)
+- Works best with listings that have multiple reviews
 
 ## Contributing
 

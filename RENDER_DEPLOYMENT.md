@@ -4,38 +4,37 @@
 
 Render.com is perfect for this application because it supports Docker and Puppeteer/Chrome out of the box!
 
-### Option 1: Automatic Deployment (Recommended)
+### Option 1: Docker Deployment (Recommended for Real Scraping)
 
 1. **Push your code to GitHub**
 2. **Go to [render.com](https://render.com) and sign up/login**
 3. **Click "New +" → "Web Service"**
 4. **Connect your GitHub repository**
 5. **Configure the service:**
+
    - **Name**: `airbnb-reviews-scraper`
-   - **Environment**: `Node`
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
+   - **Environment**: `Docker`
    - **Plan**: `Starter` (free tier)
 
-6. **Add Environment Variables:**
-   ```
-   NODE_ENV=production
-   PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-   PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome
-   ```
+6. **Render will automatically:**
+
+   - Use your `Dockerfile`
+   - Install Chrome properly
+   - Set up the environment
 
 7. **Click "Create Web Service"**
 
-### Option 2: Docker Deployment
+### Option 2: Node.js Deployment (Fallback Only)
 
-If you want to use the Docker approach:
+If you prefer Node.js environment (will use fallback mock data):
 
-1. **In Render.com, select "Docker" as environment**
-2. **Use the provided Dockerfile**
-3. **Set these environment variables:**
+1. **Environment**: `Node`
+2. **Build Command**: `npm install`
+3. **Start Command**: `npm start`
+4. **Environment Variables:**
    ```
    NODE_ENV=production
-   PORT=3000
+   PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
    ```
 
 ### Option 3: Using render.yaml (Infrastructure as Code)
@@ -48,13 +47,17 @@ If you want to use the Docker approach:
 ## 🔧 Key Fixes for Render.com
 
 ### 1. **Platform-Aware Chrome Detection**
+
 The updated `AirbnbScraper.js` now detects the platform and uses the correct Chrome path:
+
 - **Linux**: `/usr/bin/google-chrome` (Render.com uses Linux)
 - **macOS**: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
 - **Windows**: `C:\Program Files\Google\Chrome\Application\chrome.exe`
 
 ### 2. **Chrome Installation in Docker**
+
 The updated `Dockerfile` properly installs Chrome on Ubuntu:
+
 ```dockerfile
 # Install Chrome and dependencies
 RUN apt-get update && apt-get install -y \
@@ -66,6 +69,7 @@ RUN apt-get update && apt-get install -y \
 ```
 
 ### 3. **Startup Script**
+
 The `scripts/start-render.sh` script automatically detects and configures Chrome.
 
 ## 🧪 Testing Your Deployment
@@ -103,6 +107,7 @@ curl -X POST $RENDER_URL/api/analyze \
 ## 🎯 Expected Results on Render.com
 
 ✅ **What WILL work:**
+
 - Health endpoint
 - Review analysis (perfect)
 - Web scraping with Puppeteer (should work!)
@@ -110,6 +115,7 @@ curl -X POST $RENDER_URL/api/analyze \
 - Real Airbnb review extraction
 
 ⚠️ **Potential limitations:**
+
 - Airbnb may still block some requests
 - Rate limiting from Airbnb
 - Longer cold start times (free tier)
@@ -117,6 +123,7 @@ curl -X POST $RENDER_URL/api/analyze \
 ## 🔍 Debugging on Render.com
 
 ### Check Logs
+
 1. Go to your service dashboard on Render.com
 2. Click "Logs" tab
 3. Look for Chrome detection messages:
@@ -127,7 +134,9 @@ curl -X POST $RENDER_URL/api/analyze \
    ```
 
 ### Test Chrome Installation
+
 Use the debug endpoint:
+
 ```bash
 curl -X POST $RENDER_URL/api/debug-scraping \
   -H "Content-Type: application/json" \
@@ -136,12 +145,12 @@ curl -X POST $RENDER_URL/api/debug-scraping \
 
 ## 💡 Render.com vs Other Platforms
 
-| Platform | Puppeteer Support | Chrome Installation | Deployment Ease | Cost |
-|----------|------------------|-------------------|----------------|------|
-| **Render.com** | ✅ Full | ✅ Automatic | ✅ Easy | 💰 Free tier |
-| Vercel | ❌ Limited | ❌ Not supported | ✅ Easy | 💰 Free tier |
-| Heroku | ✅ With buildpack | ⚠️ Manual setup | ⚠️ Medium | 💰💰 Paid |
-| Railway | ✅ Full | ✅ Automatic | ✅ Easy | 💰 Free tier |
+| Platform       | Puppeteer Support | Chrome Installation | Deployment Ease | Cost         |
+| -------------- | ----------------- | ------------------- | --------------- | ------------ |
+| **Render.com** | ✅ Full           | ✅ Automatic        | ✅ Easy         | 💰 Free tier |
+| Vercel         | ❌ Limited        | ❌ Not supported    | ✅ Easy         | 💰 Free tier |
+| Heroku         | ✅ With buildpack | ⚠️ Manual setup     | ⚠️ Medium       | 💰💰 Paid    |
+| Railway        | ✅ Full           | ✅ Automatic        | ✅ Easy         | 💰 Free tier |
 
 ## 🚀 Deployment Steps Summary
 

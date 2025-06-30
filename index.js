@@ -173,6 +173,13 @@ app.listen(PORT, () => {
   console.log(`   POST /api/analyze - Analyze reviews to get top 5 reviews`);
   console.log(`   POST /api/scrape-and-analyze - Scrape Airbnb reviews and get top 5 positive reviews`);
   console.log(`   POST /api/scrape-reviews - Scrape Airbnb reviews only (without analysis)`);
+
+  // Display environment info for debugging
+  console.log(`\n🔍 Environment Info:`);
+  console.log(`   Platform: ${process.platform}`);
+  console.log(`   Node.js: ${process.version}`);
+  console.log(`   Chrome Path: ${process.env.PUPPETEER_EXECUTABLE_PATH || 'Auto-detect'}`);
+  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 module.exports = app;

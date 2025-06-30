@@ -48,6 +48,44 @@ class AirbnbScraper {
   }
 
   /**
+   * Detect the platform and get appropriate Chrome path
+   */
+  getSystemChromePath() {
+    const platform = process.platform;
+
+    switch (platform) {
+      case 'win32':
+        return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+      case 'darwin':
+        return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+      case 'linux':
+        // Try common Linux Chrome paths
+        const linuxPaths = [
+          '/usr/bin/google-chrome',
+          '/usr/bin/google-chrome-stable',
+          '/usr/bin/chromium-browser',
+          '/usr/bin/chromium',
+          '/snap/bin/chromium'
+        ];
+
+        // Return the first path that exists
+        const fs = require('fs');
+        for (const path of linuxPaths) {
+          try {
+            if (fs.existsSync(path)) {
+              return path;
+            }
+          } catch (error) {
+            continue;
+          }
+        }
+        return '/usr/bin/google-chrome'; // Default fallback
+      default:
+        return null;
+    }
+  }
+
+  /**
    * Launch browser with fallback strategies
    * @returns {Object} - Browser instance
    */
@@ -57,19 +95,29 @@ class AirbnbScraper {
     // Try different browser launch strategies
     try {
       // First try: Use bundled Chromium from puppeteer
+      console.log('Trying bundled Chromium from puppeteer...');
       return await puppeteer.launch(launchOptions);
     } catch (error) {
-      console.log('Bundled Chromium failed, trying @sparticuz/chromium...');
+      console.log('Bundled Chromium failed:', error.message);
       try {
+        console.log('Trying @sparticuz/chromium...');
         launchOptions.executablePath = await chromium.executablePath();
         launchOptions.args = [...chromium.args, ...launchOptions.args];
         launchOptions.defaultViewport = chromium.defaultViewport;
         return await puppeteerCore.launch(launchOptions);
       } catch (error2) {
-        console.log('Sparticuz Chromium failed, trying system Chrome...');
-        // Use system Chrome as fallback - macOS path
-        launchOptions.executablePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-        return await puppeteerCore.launch(launchOptions);
+        console.log('Sparticuz Chromium failed:', error2.message);
+        console.log('Trying system Chrome...');
+
+        // Use platform-appropriate Chrome path
+        const systemChromePath = this.getSystemChromePath();
+        if (systemChromePath) {
+          launchOptions.executablePath = systemChromePath;
+          console.log(`Using system Chrome at: ${systemChromePath}`);
+          return await puppeteerCore.launch(launchOptions);
+        } else {
+          throw new Error('No Chrome executable found for this platform');
+        }
       }
     }
   }

@@ -104,10 +104,11 @@
         </div>
     </div>
 
-    <h2>🚀 Quick Test</h2>
+    <h2>🚀 Quick Tests</h2>
     <div class="example">
-        <p>Test the health endpoint:</p>
-        <button onclick="testHealth()">Test Health Endpoint</button>
+        <p>Test the endpoints:</p>
+        <button onclick="testHealth()">Test Health</button>
+        <button onclick="testRealScraping()" style="margin-left: 10px;">Test Real Scraping</button>
         <div id="result" style="margin-top: 1rem;"></div>
     </div>
 
@@ -122,14 +123,45 @@
     <script>
         async function testHealth() {
             const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = 'Testing...';
-            
+            resultDiv.innerHTML = 'Testing health...';
+
             try {
                 const response = await fetch('/health');
                 const data = await response.json();
-                resultDiv.innerHTML = `<strong>✅ Success:</strong><br><code>${JSON.stringify(data, null, 2)}</code>`;
+                resultDiv.innerHTML = `<strong>✅ Health Check Success:</strong><br><code>${JSON.stringify(data, null, 2)}</code>`;
             } catch (error) {
-                resultDiv.innerHTML = `<strong>❌ Error:</strong><br><code>${error.message}</code>`;
+                resultDiv.innerHTML = `<strong>❌ Health Check Error:</strong><br><code>${error.message}</code>`;
+            }
+        }
+
+        async function testRealScraping() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing real scraping (this may take up to 60 seconds)...';
+
+            try {
+                const response = await fetch('/api/test-real-scraping');
+                const data = await response.json();
+
+                let html = `<strong>${data.success ? '✅' : '⚠️'} Scraping Test Results:</strong><br>`;
+                html += `<strong>Steps:</strong><br>`;
+                data.steps.forEach(step => {
+                    html += `• ${step}<br>`;
+                });
+
+                if (data.success && data.scrapingResult) {
+                    html += `<br><strong>Real Reviews Found:</strong> ${data.scrapingResult.reviewCount}<br>`;
+                    html += `<strong>Property:</strong> ${data.scrapingResult.propertyName}<br>`;
+                    if (data.topReviews && data.topReviews.length > 0) {
+                        html += `<strong>Top Review:</strong> ${data.topReviews[0].substring(0, 100)}...<br>`;
+                    }
+                } else if (data.mockReviews) {
+                    html += `<br><strong>Using Mock Data:</strong> ${data.mockReviews.length} reviews<br>`;
+                    html += `<strong>Reason:</strong> ${data.reason || data.error}<br>`;
+                }
+
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>❌ Scraping Test Error:</strong><br><code>${error.message}</code>`;
             }
         }
     </script>

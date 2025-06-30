@@ -36,14 +36,24 @@ module.exports = async (req, res) => {
     // Initialize scraper
     const scraper = new VercelAirbnbScraper();
     
-    // Use VercelAirbnbScraper to get data
-    const result = await scraper.scrapeComplete(airbnbUrl, maxReviews);
-    
+    let result;
+    let scrapingError = null;
+
+    try {
+      // Use VercelAirbnbScraper to get data
+      result = await scraper.scrapeComplete(airbnbUrl, maxReviews);
+      console.log(`Scraping result: ${result.reviews.length} reviews found`);
+    } catch (scrapingErr) {
+      scrapingError = scrapingErr.message;
+      console.error('Scraping failed:', scrapingError);
+      result = { reviews: [] };
+    }
+
     if (result.reviews.length === 0) {
       // Fallback to mock data for demo
       const listingId = scraper.extractListingId(airbnbUrl);
       const mockReviews = await scraper.getMockReviews(listingId);
-      
+
       return res.status(200).json({
         listingId,
         propertyName: 'Demo Property (Mock Data)',
@@ -51,9 +61,21 @@ module.exports = async (req, res) => {
         reviews: mockReviews,
         reviewCount: mockReviews.length,
         scrapedAt: new Date().toISOString(),
-        note: 'This is mock data for demonstration. Real scraping may be limited on serverless platforms.'
+        note: 'This is mock data for demonstration. Real scraping may be limited on serverless platforms.',
+        debug: {
+          scrapingAttempted: true,
+          scrapingError: scrapingError,
+          reason: 'No reviews found or scraping blocked'
+        }
       });
     }
+
+    // Add debug info to successful results
+    result.debug = {
+      scrapingAttempted: true,
+      scrapingSuccessful: true,
+      realData: true
+    };
 
     res.status(200).json(result);
 

@@ -6,6 +6,12 @@
     },
     "api/scrape-and-analyze.js": {
       "maxDuration": 60
+    },
+    "api/debug-scraping.js": {
+      "maxDuration": 30
+    },
+    "api/test-real-scraping.js": {
+      "maxDuration": 60
     }
   },
   "routes": [

@@ -1,18 +1,10 @@
 {
   "version": 2,
   "functions": {
-    "api/health.js": {
-      "runtime": "nodejs18.x"
-    },
-    "api/analyze.js": {
-      "runtime": "nodejs18.x"
-    },
     "api/scrape-reviews.js": {
-      "runtime": "nodejs18.x",
       "maxDuration": 60
     },
     "api/scrape-and-analyze.js": {
-      "runtime": "nodejs18.x",
       "maxDuration": 60
     }
   },
@@ -29,9 +21,5 @@
       "src": "/api/(.*)",
       "dest": "/api/$1"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "installCommand": "npm install --production"
+  ]
 }
